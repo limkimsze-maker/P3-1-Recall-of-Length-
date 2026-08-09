@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Length Challenge – 1 or 2 Players</title>
+<style>
+:root{
+  --blue:#0878c9; --deep:#07558e; --light:#edf8ff; --ink:#19324a;
+  --good:#169b55; --bad:#d84b4b; --gold:#ffb703; --p1:#2d8de0; --p2:#ef8a2f;
+  --line:#2f80d1; --fill:#f7fbff;
+}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;font-family:"Trebuchet MS","Arial Rounded MT Bold",Arial,sans-serif;background:linear-gradient(#dff4ff,#fff);color:var(--ink)}
+body{padding:10px}
+button{font:inherit;cursor:pointer;touch-action:manipulation}
+.app{max-width:1180px;margin:auto;background:#fff;border:2px solid #cdeaff;border-radius:26px;overflow:hidden;box-shadow:0 12px 36px #4f8db426;min-height:94vh}
+header{background:var(--blue);color:#fff;padding:14px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+header h1{margin:0;font-size:clamp(22px,3vw,38px)}
+header .sub{font-size:14px;opacity:.95;text-align:right}
+main{padding:18px}
+.screen{display:none}.screen.active{display:block}
+.home{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;align-items:stretch}
+.card{border:2px solid #d8efff;border-radius:22px;background:#fff;box-shadow:0 8px 24px #4584ad1c}
+.intro{padding:28px}
+.intro h2{font-size:clamp(30px,5vw,58px);line-height:1.02;margin:0;color:var(--deep)}
+.intro p{font-size:clamp(17px,2vw,22px);line-height:1.45}
+.modegrid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.mode{border:0;border-radius:20px;padding:22px 10px;color:white;font-size:clamp(20px,2.3vw,30px);font-weight:900;box-shadow:0 7px 0 #0002}
+.mode:active{transform:translateY(4px);box-shadow:0 3px 0 #0002}
+.one{background:var(--p1)} .two{background:linear-gradient(90deg,var(--p1) 50%,var(--p2) 50%)}
+.preview{padding:20px;background:linear-gradient(150deg,#fff8d6,#e9f8ff);display:flex;flex-direction:column;justify-content:center;text-align:center}
+.preview .icons{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-bottom:10px}
+.preview b{font-size:20px}
+.preview ul{text-align:left;line-height:1.6;font-size:17px}
+.controls{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px}
+.smallbtn{border:0;background:#eaf6ff;color:#075f9f;border-radius:12px;padding:10px 14px;font-weight:800}
+.scoreline{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center}
+.score{padding:11px 14px;background:white;border:2px solid #dceeff;border-radius:14px;font-weight:900}
+.score.p1{border-color:#9fd1ff}.score.p2{border-color:#ffc18a;text-align:right}
+.round{font-weight:900;color:#557086;text-align:center}
+.progress{height:10px;background:#e7f2f8;border-radius:99px;overflow:hidden;margin:8px 0 15px}
+.progress div{height:100%;background:var(--blue);width:0;transition:.25s}
+.qcard{padding:20px;min-height:520px;display:flex;flex-direction:column;justify-content:center}
+.tag{align-self:center;background:#e9f7ff;color:#0766aa;padding:7px 13px;border-radius:99px;font-weight:900}
+#picture{margin-top:10px;min-height:150px}
+.visuals{display:flex;justify-content:center;gap:14px;flex-wrap:wrap}
+.objcard{min-width:160px;max-width:230px;border:2px solid #cfe9fb;background:linear-gradient(#ffffff,#f4fbff);border-radius:18px;padding:12px 10px;text-align:center;box-shadow:0 4px 10px #4f8db41a}
+.objsvg{width:100%;height:90px;display:flex;align-items:center;justify-content:center}
+.objsvg svg{width:100%;height:90px;overflow:visible}
+.objname{margin-top:4px;font-weight:900;font-size:clamp(16px,2vw,20px);line-height:1.18}
+.objmeasure{margin-top:6px;background:#edf7ff;border-radius:12px;padding:7px 10px;font-weight:900;font-size:clamp(15px,1.8vw,18px);color:#0a69ae}
+#lineStyle{display:none}
+#question{font-size:clamp(23px,3.4vw,42px);line-height:1.25;text-align:center;font-weight:900;max-width:980px;margin:12px auto 18px}
+.answers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;width:min(820px,100%);margin:auto}
+.answer{border:3px solid #b7dcf4;background:#f9fdff;border-radius:18px;padding:14px;min-height:78px;font-size:clamp(20px,2.5vw,30px);font-weight:900;color:var(--ink)}
+.answer:hover{background:#eaf7ff}
+.answer.correct{border-color:var(--good);background:#e9f9ef;color:#08763c}
+.answer.wrong{border-color:var(--bad);background:#fff0f0;color:#b12d2d}
+.feedback{text-align:center;min-height:34px;font-size:21px;font-weight:900;margin-top:13px}
+.next{display:none;margin:4px auto 0;border:0;background:var(--blue);color:white;border-radius:14px;padding:12px 24px;font-weight:900;font-size:20px}
+.duelwrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.playerpanel{border-radius:20px;padding:12px;border:3px solid}
+.playerpanel.left{border-color:#9ed0ff;background:#f3faff}
+.playerpanel.right{border-color:#ffc18b;background:#fff7ef}
+.playername{text-align:center;font-weight:900;font-size:22px;margin-bottom:8px}
+.panswers{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.panswer{min-height:62px;border-radius:14px;background:white;border:2px solid #cfdfe9;font-size:20px;font-weight:900}
+.panswer.locked{opacity:.42}
+.panswer.correct{border-color:var(--good);background:#e9f9ef}
+.panswer.wrong{border-color:var(--bad);background:#fff0f0}
+.results{text-align:center;padding:34px}
+.results h2{font-size:clamp(34px,5vw,60px);color:var(--deep);margin:0 0 14px}
+.trophy{font-size:90px}
+.results p{font-size:22px;line-height:1.5}
+.bigbtn{border:0;border-radius:16px;padding:15px 24px;margin:8px;background:var(--blue);color:white;font-size:21px;font-weight:900}
+.gold{background:#e49a00}
+.hidden{display:none!important}
+.note{font-size:14px;color:#667b8d;text-align:center;margin-top:10px}
+.previewthumb{width:110px;height:70px;border:2px solid #cfe9fb;border-radius:14px;background:#fff;padding:4px}
+.previewthumb svg{width:100%;height:100%}
+svg .line{stroke:var(--line);stroke-width:2.5;fill:none;stroke-linecap:round;stroke-linejoin:round}
+svg .fill{stroke:var(--line);stroke-width:2.5;fill:var(--fill);stroke-linejoin:round}
+svg .glass{stroke:var(--line);stroke-width:2.2;fill:#e9f5ff}
+svg .leaf{stroke:var(--line);stroke-width:2.2;fill:#eef8ff}
+@media(max-width:780px){
+  body{padding:0}.app{border-radius:0;min-height:100vh}.home{grid-template-columns:1fr}.preview{display:none}
+  main{padding:12px}.qcard{min-height:560px;padding:14px}
+  .duelwrap{gap:6px}.playerpanel{padding:8px}.panswer{font-size:16px;min-height:58px}
+  .playername{font-size:18px}.answers{gap:9px}.answer{min-height:72px}
+  .scoreline{grid-template-columns:1fr 70px 1fr}.score{padding:8px;font-size:14px}
+  .objcard{min-width:125px;max-width:170px;padding:10px 8px}
+  .objsvg{height:78px}.objsvg svg{height:78px}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<header>
+  <h1>📏 Length Challenge</h1>
+  <div class="sub">Chapter 11 • Recall & Compare Lengths<br>1 Player or 2 Players</div>
+</header>
+<main>
+<section id="home" class="screen active">
+  <div class="home">
+    <div class="card intro">
+      <h2>Measure. Compare. Win!</h2>
+      <p>Practise choosing <b>m</b> or <b>cm</b>, finding differences in height, ordering objects and estimating sensible lengths.</p>
+      <div class="modegrid">
+        <button class="mode one" onclick="startGame(1)">👤 1 Player</button>
+        <button class="mode two" onclick="startGame(2)">👥 2 Players</button>
+      </div>
+      <p class="note">Each game has 12 questions. Questions are mixed and change each round.</p>
+    </div>
+    <div class="card preview">
+      <div class="icons">
+        <div class="previewthumb" id="p1"></div>
+        <div class="previewthumb" id="p2"></div>
+        <div class="previewthumb" id="p3"></div>
+        <div class="previewthumb" id="p4"></div>
+      </div>
+      <b>Now with actual drawn pictures</b>
+      <ul>
+        <li>Choose the correct unit: metre or centimetre.</li>
+        <li>Find how much taller or shorter.</li>
+        <li>Arrange 3 structures from shortest to tallest.</li>
+        <li>Choose a sensible estimated length.</li>
+        <li>Find a missing height from comparison clues.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="game" class="screen">
+  <div class="controls">
+    <button class="smallbtn" onclick="goHome()">← Home</button>
+    <button class="smallbtn" onclick="restart()">↻ New Game</button>
+  </div>
+  <div class="scoreline">
+    <div class="score p1" id="score1">Player 1: 0</div>
+    <div class="round" id="round">1 / 12</div>
+    <div class="score p2" id="score2">Player 2: 0</div>
+  </div>
+  <div class="progress"><div id="bar"></div></div>
+
+  <div class="card qcard">
+    <div class="tag" id="tag">Choose the unit</div>
+    <div id="picture"></div>
+    <div id="question"></div>
+
+    <div id="soloAnswers" class="answers"></div>
+
+    <div id="duelAnswers" class="duelwrap hidden">
+      <div class="playerpanel left">
+        <div class="playername">🔵 Player 1</div>
+        <div class="panswers" id="p1answers"></div>
+      </div>
+      <div class="playerpanel right">
+        <div class="playername">🟠 Player 2</div>
+        <div class="panswers" id="p2answers"></div>
+      </div>
+    </div>
+
+    <div class="feedback" id="feedback"></div>
+    <button id="nextBtn" class="next" onclick="nextQuestion()">Next →</button>
+  </div>
+</section>
+
+<section id="results" class="screen">
+  <div class="card results">
+    <div class="trophy" id="trophy">🏆</div>
+    <h2 id="resultTitle">Great job!</h2>
+    <p id="resultText"></p>
+    <button class="bigbtn" onclick="restart()">Play Again</button>
+    <button class="bigbtn gold" onclick="goHome()">Choose Mode</button>
+  </div>
+</section>
+</main>
+</div>
+
+<script>
+const TOTAL=12;
+let mode=1, round=0, scores=[0,0], questions=[], answered=false, pLocked=[false,false];
+
+const unitObjects=[
+ {name:"cupboard", type:"cupboard", value:2, unit:"m", dimension:"height"},
+ {name:"book", type:"book", value:30, unit:"cm", dimension:"length"},
+ {name:"bus", type:"bus", value:12, unit:"m", dimension:"length"},
+ {name:"pen", type:"pen", value:15, unit:"cm", dimension:"length"},
+ {name:"classroom door", type:"door", value:2, unit:"m", dimension:"height"},
+ {name:"water bottle", type:"bottle", value:25, unit:"cm", dimension:"height"},
+ {name:"school corridor", type:"corridor", value:20, unit:"m", dimension:"length"},
+ {name:"pencil", type:"pencil", value:18, unit:"cm", dimension:"length"},
+ {name:"dining table", type:"table", value:1, unit:"m", dimension:"length"},
+ {name:"ruler", type:"ruler", value:30, unit:"cm", dimension:"length"}
+];
+
+const structures=[
+ {name:"Merlion",type:"merlion",h:37},
+ {name:"Changi Airport Control Tower",type:"tower",h:80},
+ {name:"Supertree Grove",type:"supertree",h:50},
+ {name:"Singapore Flyer",type:"flyer",h:165},
+ {name:"school building",type:"school",h:24},
+ {name:"lamp post",type:"lamp",h:8}
+];
+
+function shuffle(a){return [...a].sort(()=>Math.random()-.5)}
+function choice(a){return a[Math.floor(Math.random()*a.length)]}
+function show(id){document.querySelectorAll(".screen").forEach(x=>x.classList.remove("active"));document.getElementById(id).classList.add("active")}
+function startGame(m){mode=m;restart()}
+function restart(){
+ round=0;scores=[0,0];questions=buildQuestions();
+ document.getElementById("score2").style.visibility=mode===2?"visible":"hidden";
+ show("game");renderQuestion();
+}
+function goHome(){show("home")}
+
+function drawSVG(type){
+  const art = {
+    cupboard:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="10" y="12" width="78" height="66"/>
+      <line class="line" x1="49" y1="14" x2="49" y2="76"/>
+      <rect class="fill" x="90" y="12" width="20" height="66"/>
+      <line class="line" x1="90" y1="28" x2="110" y2="28"/>
+      <line class="line" x1="90" y1="44" x2="110" y2="44"/>
+      <line class="line" x1="90" y1="60" x2="110" y2="60"/>
+      <circle class="line" cx="43" cy="46" r="1.8"/>
+      <circle class="line" cx="55" cy="46" r="1.8"/>
+      <line class="line" x1="8" y1="12" x2="112" y2="12"/>
+      <line class="line" x1="8" y1="8" x2="112" y2="8"/>
+    </svg>`,
+    book:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <polygon class="fill" points="25,22 80,22 100,35 45,35"/>
+      <polygon class="fill" points="25,22 25,60 45,74 45,35"/>
+      <polygon class="fill" points="45,35 100,35 100,74 45,74"/>
+      <line class="line" x1="52" y1="42" x2="92" y2="42"/>
+      <line class="line" x1="52" y1="49" x2="92" y2="49"/>
+      <line class="line" x1="52" y1="56" x2="92" y2="56"/>
+      <line class="line" x1="52" y1="63" x2="92" y2="63"/>
+      <line class="line" x1="27" y1="56" x2="42" y2="66"/>
+    </svg>`,
+    bus:`<svg viewBox="0 0 140 90" aria-hidden="true">
+      <rect class="fill" x="10" y="28" rx="5" ry="5" width="118" height="38"/>
+      <rect class="glass" x="18" y="34" width="18" height="14"/>
+      <rect class="glass" x="39" y="34" width="18" height="14"/>
+      <rect class="glass" x="60" y="34" width="18" height="14"/>
+      <rect class="glass" x="81" y="34" width="18" height="14"/>
+      <rect class="glass" x="103" y="34" width="18" height="14"/>
+      <rect class="fill" x="18" y="49" width="16" height="17"/>
+      <rect class="fill" x="82" y="46" width="14" height="20"/>
+      <line class="line" x1="89" y1="46" x2="89" y2="66"/>
+      <circle class="fill" cx="35" cy="70" r="10"/>
+      <circle class="fill" cx="101" cy="70" r="10"/>
+      <circle class="line" cx="35" cy="70" r="4"/>
+      <circle class="line" cx="101" cy="70" r="4"/>
+      <line class="line" x1="7" y1="66" x2="128" y2="66"/>
+    </svg>`,
+    pen:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <polygon class="fill" points="22,61 72,28 80,40 30,73"/>
+      <polygon class="fill" points="72,28 88,19 96,31 80,40"/>
+      <polygon class="fill" points="22,61 16,69 30,73"/>
+      <line class="line" x1="69" y1="30" x2="79" y2="45"/>
+      <line class="line" x1="78" y1="24" x2="88" y2="39"/>
+    </svg>`,
+    door:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="35" y="12" width="40" height="66"/>
+      <rect class="line" x="40" y="18" width="30" height="54"/>
+      <circle class="line" cx="65" cy="48" r="1.8"/>
+    </svg>`,
+    bottle:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="49" y="15" width="22" height="10" rx="2"/>
+      <rect class="fill" x="43" y="25" width="34" height="50" rx="8"/>
+      <line class="line" x1="48" y1="40" x2="72" y2="40"/>
+      <line class="line" x1="48" y1="48" x2="72" y2="48"/>
+      <line class="line" x1="48" y1="56" x2="72" y2="56"/>
+    </svg>`,
+    corridor:`<svg viewBox="0 0 140 90" aria-hidden="true">
+      <polygon class="line" points="22,18 118,18 95,72 45,72"/>
+      <line class="line" x1="38" y1="18" x2="55" y2="72"/>
+      <line class="line" x1="58" y1="18" x2="67" y2="72"/>
+      <line class="line" x1="82" y1="18" x2="73" y2="72"/>
+      <line class="line" x1="102" y1="18" x2="85" y2="72"/>
+      <line class="line" x1="22" y1="18" x2="45" y2="72"/>
+      <line class="line" x1="118" y1="18" x2="95" y2="72"/>
+    </svg>`,
+    pencil:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <polygon class="fill" points="20,54 80,24 90,42 30,72"/>
+      <polygon class="fill" points="80,24 96,16 102,28 90,42"/>
+      <polygon class="fill" points="20,54 12,62 30,72"/>
+      <line class="line" x1="75" y1="27" x2="88" y2="48"/>
+      <line class="line" x1="88" y1="19" x2="96" y2="31"/>
+    </svg>`,
+    table:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="24" y="26" width="72" height="12" rx="2"/>
+      <line class="line" x1="32" y1="38" x2="28" y2="72"/>
+      <line class="line" x1="88" y1="38" x2="92" y2="72"/>
+      <line class="line" x1="44" y1="38" x2="44" y2="72"/>
+      <line class="line" x1="76" y1="38" x2="76" y2="72"/>
+    </svg>`,
+    ruler:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="15" y="38" width="90" height="16" rx="3"/>
+      <line class="line" x1="25" y1="38" x2="25" y2="50"/>
+      <line class="line" x1="35" y1="38" x2="35" y2="47"/>
+      <line class="line" x1="45" y1="38" x2="45" y2="50"/>
+      <line class="line" x1="55" y1="38" x2="55" y2="47"/>
+      <line class="line" x1="65" y1="38" x2="65" y2="50"/>
+      <line class="line" x1="75" y1="38" x2="75" y2="47"/>
+      <line class="line" x1="85" y1="38" x2="85" y2="50"/>
+      <line class="line" x1="95" y1="38" x2="95" y2="47"/>
+    </svg>`,
+    merlion:`<svg viewBox="0 0 100 110" aria-hidden="true">
+      <path class="fill" d="M38 90c-6-11-7-24-4-36 3-14 13-27 24-33 8-5 19-7 24 3 7 15-3 26-11 32-5 4-6 8-4 13 2 6 7 12 7 21H38z"/>
+      <path class="line" d="M45 38c3-8 10-13 18-16"/>
+      <circle class="line" cx="58" cy="38" r="1.5"/>
+      <path class="line" d="M62 45c6 3 11 8 15 14"/>
+      <path class="line" d="M35 63c-8 5-13 14-14 27"/>
+      <path class="line" d="M46 89c5-8 13-14 22-16"/>
+      <path class="line" d="M69 23c7-5 14-7 19-5 5 2 6 9 1 14"/>
+    </svg>`,
+    tower:`<svg viewBox="0 0 100 110" aria-hidden="true">
+      <rect class="fill" x="44" y="28" width="12" height="64"/>
+      <ellipse class="fill" cx="50" cy="22" rx="25" ry="11"/>
+      <ellipse class="line" cx="50" cy="22" rx="18" ry="7"/>
+      <line class="line" x1="28" y1="22" x2="72" y2="22"/>
+      <line class="line" x1="32" y1="28" x2="68" y2="28"/>
+      <line class="line" x1="34" y1="14" x2="66" y2="14"/>
+      <ellipse class="fill" cx="50" cy="10" rx="7" ry="5"/>
+    </svg>`,
+    supertree:`<svg viewBox="0 0 100 110" aria-hidden="true">
+      <path class="line" d="M50 92V50"/>
+      <path class="line" d="M50 50c-6 8-10 18-11 28"/>
+      <path class="line" d="M50 50c6 8 10 18 11 28"/>
+      <path class="leaf" d="M16 40c10-17 27-25 34-25s24 8 34 25c-11-5-20-7-34-7s-23 2-34 7z"/>
+      <path class="line" d="M50 16v25"/>
+      <path class="line" d="M24 39c7-8 15-13 26-15"/>
+      <path class="line" d="M76 39c-7-8-15-13-26-15"/>
+    </svg>`,
+    flyer:`<svg viewBox="0 0 100 110" aria-hidden="true">
+      <circle class="fill" cx="50" cy="46" r="28"/>
+      <circle class="line" cx="50" cy="46" r="5"/>
+      <line class="line" x1="50" y1="18" x2="50" y2="74"/>
+      <line class="line" x1="22" y1="46" x2="78" y2="46"/>
+      <line class="line" x1="31" y1="27" x2="69" y2="65"/>
+      <line class="line" x1="69" y1="27" x2="31" y2="65"/>
+      <line class="line" x1="50" y1="74" x2="50" y2="95"/>
+      <line class="line" x1="40" y1="95" x2="60" y2="95"/>
+    </svg>`,
+    school:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="20" y="28" width="80" height="42"/>
+      <polygon class="fill" points="15,28 60,10 105,28"/>
+      <rect class="glass" x="28" y="36" width="14" height="12"/>
+      <rect class="glass" x="48" y="36" width="14" height="12"/>
+      <rect class="glass" x="68" y="36" width="14" height="12"/>
+      <rect class="fill" x="54" y="52" width="12" height="18"/>
+    </svg>`,
+    lamp:`<svg viewBox="0 0 100 110" aria-hidden="true">
+      <line class="line" x1="50" y1="18" x2="50" y2="96"/>
+      <path class="fill" d="M37 20h26l-4 16H41z"/>
+      <line class="line" x1="40" y1="96" x2="60" y2="96"/>
+    </svg>`,
+    tree:`<svg viewBox="0 0 100 110" aria-hidden="true">
+      <rect class="fill" x="45" y="56" width="10" height="30"/>
+      <circle class="leaf" cx="50" cy="42" r="18"/>
+      <circle class="leaf" cx="38" cy="48" r="12"/>
+      <circle class="leaf" cx="62" cy="48" r="12"/>
+    </svg>`,
+    bed:`<svg viewBox="0 0 120 90" aria-hidden="true">
+      <rect class="fill" x="18" y="42" width="84" height="20"/>
+      <rect class="fill" x="18" y="30" width="18" height="32"/>
+      <rect class="fill" x="40" y="34" width="24" height="10"/>
+      <line class="line" x1="24" y1="62" x2="24" y2="75"/>
+      <line class="line" x1="96" y1="62" x2="96" y2="75"/>
+    </svg>`
+  };
+  return art[type] || art.book;
+}
+
+function objectCard(type,name,measure){
+  return `<div class="objcard">
+    <div class="objsvg">${drawSVG(type)}</div>
+    <div class="objname">${name}</div>
+    <div class="objmeasure">${measure}</div>
+  </div>`;
+}
+function visuals(cards){
+  return `<div class="visuals">${cards.join("")}</div>`;
+}
+
+function buildQuestions(){
+ let qs=[];
+
+ shuffle(unitObjects).slice(0,4).forEach(o=>{
+   const word = o.dimension==="height" ? "tall" : "long";
+   qs.push({
+     tag:"Choose the unit",
+     picHTML: visuals([objectCard(o.type, o.name, `${o.value} ___ ${word}`)]),
+     q:`Choose the correct unit for the labelled ${o.dimension}.`,
+     options:["m","cm"],
+     answer:o.unit,
+     explain:`A ${o.name} is about ${o.value} ${o.unit} ${word}.`
+   });
+ });
+
+ for(let i=0;i<3;i++){
+   let [a,b]=shuffle(structures).slice(0,2);
+   let taller=a.h>b.h?a:b, shorter=a.h>b.h?b:a;
+   let diff=taller.h-shorter.h;
+   let pairHTML = visuals([
+     objectCard(shorter.type, shorter.name, `${shorter.h} m tall`),
+     objectCard(taller.type, taller.name, `${taller.h} m tall`)
+   ]);
+   if(Math.random()<.5){
+     let opts=numOptions(diff);
+     qs.push({
+       tag:"Compare heights",
+       picHTML: pairHTML,
+       q:`The ${shorter.name} is ___ m shorter than the ${taller.name}.`,
+       options:opts,
+       answer:String(diff),
+       explain:`${taller.h} − ${shorter.h} = ${diff} m.`
+     });
+   }else{
+     let opts=numOptions(diff);
+     qs.push({
+       tag:"Compare heights",
+       picHTML: pairHTML,
+       q:`The ${taller.name} is ___ m taller than the ${shorter.name}.`,
+       options:opts,
+       answer:String(diff),
+       explain:`${taller.h} − ${shorter.h} = ${diff} m.`
+     });
+   }
+ }
+
+ for(let i=0;i<2;i++){
+   let trio=shuffle(structures).slice(0,3);
+   let sorted=[...trio].sort((a,b)=>a.h-b.h);
+   let ans=sorted.map(x=>x.name).join(" → ");
+   let wrong1=[sorted[1],sorted[0],sorted[2]].map(x=>x.name).join(" → ");
+   let wrong2=[...sorted].reverse().map(x=>x.name).join(" → ");
+   let wrong3=[sorted[0],sorted[2],sorted[1]].map(x=>x.name).join(" → ");
+   qs.push({
+     tag:"Order heights",
+     picHTML: visuals(trio.map(x=>objectCard(x.type,x.name,`${x.h} m tall`))),
+     q:`Arrange the labelled structures from <b>shortest to tallest</b>.`,
+     options:shuffle([ans,wrong1,wrong2,wrong3]),
+     answer:ans,
+     explain:`${sorted.map(x=>`${x.name} (${x.h} m)`).join(" < ")}.`
+   });
+ }
+
+ const estimates=[
+  {name:"pencil", type:"pencil", measure:"Length ?", q:"Which is the most sensible length of a pencil?", ans:"18 cm", ops:["18 cm","18 m","180 m","2 m"]},
+  {name:"bus", type:"bus", measure:"Length ?", q:"Which is the most sensible length of a bus?", ans:"12 m", ops:["12 m","12 cm","120 cm","1 cm"]},
+  {name:"book", type:"book", measure:"Length ?", q:"Which is the most sensible length of a book?", ans:"30 cm", ops:["30 cm","30 m","3 m","300 m"]},
+  {name:"cupboard", type:"cupboard", measure:"Height ?", q:"Which is the most sensible height of a cupboard?", ans:"2 m", ops:["2 m","2 cm","20 m","200 m"]},
+  {name:"bed", type:"bed", measure:"Length ?", q:"Which is the most sensible length of a bed?", ans:"2 m", ops:["2 m","2 cm","20 cm","20 m"]}
+ ];
+ shuffle(estimates).slice(0,2).forEach(e=>qs.push({
+   tag:"Estimate length",
+   picHTML: visuals([objectCard(e.type,e.name,e.measure)]),
+   q:e.q,
+   options:shuffle(e.ops),
+   answer:e.ans,
+   explain:`${e.ans} is the sensible estimate.`
+ }));
+
+ let tree=choice([35,40,45,50]), extra=choice([12,15,20,25]), ans=tree+extra;
+ qs.push({
+   tag:"Missing height",
+   picHTML: visuals([
+     objectCard("tree","tree",`${tree} m tall`),
+     objectCard("tower","tower",`? m tall`)
+   ]),
+   q:`A tower is ${extra} m taller than the tree. How tall is the tower?`,
+   options:numOptions(ans),
+   answer:String(ans),
+   explain:`${tree} + ${extra} = ${ans} m.`
+ });
+
+ return shuffle(qs).slice(0,TOTAL);
+}
+
+function numOptions(ans){
+ let set=new Set([String(ans)]);
+ let d=[-20,-10,-5,5,10,20,3,-3];
+ shuffle(d).forEach(x=>{if(ans+x>0&&set.size<4)set.add(String(ans+x))});
+ return shuffle([...set]);
+}
+
+function renderQuestion(){
+ answered=false;pLocked=[false,false];
+ const q=questions[round];
+ document.getElementById("round").textContent=`${round+1} / ${TOTAL}`;
+ document.getElementById("bar").style.width=`${(round/TOTAL)*100}%`;
+ document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+ document.getElementById("score2").textContent=`Player 2: ${scores[1]}`;
+ document.getElementById("tag").textContent=q.tag;
+ document.getElementById("picture").innerHTML=q.picHTML || "";
+ document.getElementById("question").innerHTML=q.q;
+ document.getElementById("feedback").textContent="";
+ document.getElementById("nextBtn").style.display="none";
+ if(mode===1){
+   document.getElementById("soloAnswers").classList.remove("hidden");
+   document.getElementById("duelAnswers").classList.add("hidden");
+   fillSolo(q);
+ }else{
+   document.getElementById("soloAnswers").classList.add("hidden");
+   document.getElementById("duelAnswers").classList.remove("hidden");
+   fillDuel(q);
+ }
+}
+
+function fillSolo(q){
+ const box=document.getElementById("soloAnswers");box.innerHTML="";
+ q.options.forEach(op=>{
+   let b=document.createElement("button");b.className="answer";b.innerHTML=op;
+   b.onclick=()=>soloAnswer(b,op);box.appendChild(b);
+ });
+}
+function soloAnswer(btn,op){
+ if(answered)return;answered=true;
+ const q=questions[round], ok=op===q.answer;
+ if(ok){scores[0]++;btn.classList.add("correct");feedback("✅ Correct! "+q.explain,true)}
+ else{
+   btn.classList.add("wrong");
+   [...document.querySelectorAll("#soloAnswers .answer")].forEach(b=>{if(b.textContent.trim()===q.answer)b.classList.add("correct")});
+   feedback("💡 "+q.explain,false);
+ }
+ document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+ document.getElementById("nextBtn").style.display="block";
+}
+function fillDuel(q){
+ ["p1answers","p2answers"].forEach((id,pi)=>{
+   const box=document.getElementById(id);box.innerHTML="";
+   q.options.forEach(op=>{
+     let b=document.createElement("button");b.className="panswer";b.innerHTML=op;
+     b.onclick=()=>duelAnswer(pi,b,op);box.appendChild(b);
+   });
+ });
+}
+function duelAnswer(pi,btn,op){
+ if(answered||pLocked[pi])return;
+ const q=questions[round];
+ if(op===q.answer){
+   answered=true;scores[pi]++;
+   btn.classList.add("correct");
+   document.querySelectorAll(".panswer").forEach(x=>x.disabled=true);
+   feedback(`🏁 Player ${pi+1} wins the point! ${q.explain}`,true);
+   document.getElementById("score1").textContent=`Player 1: ${scores[0]}`;
+   document.getElementById("score2").textContent=`Player 2: ${scores[1]}`;
+   document.getElementById("nextBtn").style.display="block";
+ }else{
+   pLocked[pi]=true;btn.classList.add("wrong");
+   const own=document.querySelectorAll(pi===0?"#p1answers .panswer":"#p2answers .panswer");
+   own.forEach(x=>{x.disabled=true;x.classList.add("locked")});
+   feedback(`❌ Player ${pi+1} is locked out. Other player can answer!`,false);
+   if(pLocked[0]&&pLocked[1]){
+     answered=true;
+     document.querySelectorAll(".panswer").forEach(x=>{if(x.textContent.trim()===q.answer)x.classList.add("correct")});
+     feedback(`💡 No point this round. ${q.explain}`,false);
+     document.getElementById("nextBtn").style.display="block";
+   }
+ }
+}
+function feedback(t,good){let f=document.getElementById("feedback");f.textContent=t;f.style.color=good?"#14884b":"#b43b3b"}
+function nextQuestion(){
+ round++;
+ if(round>=TOTAL){finish();return}
+ renderQuestion();
+}
+function finish(){
+ document.getElementById("bar").style.width="100%";
+ show("results");
+ if(mode===1){
+   const s=scores[0];
+   document.getElementById("trophy").textContent=s>=10?"🏆":s>=7?"🌟":"💪";
+   document.getElementById("resultTitle").textContent=s>=10?"Length Champion!":s>=7?"Great Work!":"Keep Practising!";
+   document.getElementById("resultText").innerHTML=`You scored <b>${s} / ${TOTAL}</b>.<br>${s>=10?"You are very confident with length!":s>=7?"You understand most of the ideas.":"Try another round and aim to beat your score."}`;
+ }else{
+   let a=scores[0],b=scores[1];
+   document.getElementById("trophy").textContent=a===b?"🤝":"🏆";
+   document.getElementById("resultTitle").textContent=a===b?"It's a Draw!":`Player ${a>b?1:2} Wins!`;
+   document.getElementById("resultText").innerHTML=`Player 1: <b>${a}</b> point${a===1?"":"s"}<br>Player 2: <b>${b}</b> point${b===1?"":"s"}<br><br>Play again for a fresh mix of questions.`;
+ }
+}
+
+document.getElementById("p1").innerHTML = drawSVG("cupboard");
+document.getElementById("p2").innerHTML = drawSVG("bus");
+document.getElementById("p3").innerHTML = drawSVG("merlion");
+document.getElementById("p4").innerHTML = drawSVG("supertree");
+</script>
+</body>
+</html>
