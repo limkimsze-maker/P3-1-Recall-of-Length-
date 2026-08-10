@@ -21,6 +21,14 @@ jobs:
           {name:"wardrobe",type:"cupboard",value:2,unit:"m",dimension:"height"},{name:"magazine",type:"book",value:26,unit:"cm",dimension:"length"},{name:"coach",type:"bus",value:11,unit:"m",dimension:"length"},{name:"marker pen",type:"pen",value:14,unit:"cm",dimension:"length"},{name:"lift door",type:"door",value:2,unit:"m",dimension:"height"},{name:"sports bottle",type:"bottle",value:24,unit:"cm",dimension:"height"},{name:"school hall",type:"corridor",value:18,unit:"m",dimension:"length"},{name:"coloured pencil",type:"pencil",value:17,unit:"cm",dimension:"length"},{name:"study table",type:"table",value:1,unit:"m",dimension:"length"},{name:"measuring strip",type:"ruler",value:30,unit:"cm",dimension:"length"}
           ];
           const structures=''', s, count=1, flags=re.S)
+          s=re.sub(r'const structures=\[.*?\];', '''const structures=[
+          {name:"double-decker bus",type:"bus",h:4},
+          {name:"street lamp",type:"lamp",h:8},
+          {name:"community sports hall",type:"school",h:12},
+          {name:"park lookout tower",type:"tower",h:20},
+          {name:"apartment block",type:"school",h:30},
+          {name:"stadium floodlight mast",type:"tower",h:40}
+          ];''', s, count=1, flags=re.S)
           start=s.find('const estimates=[')
           end=s.find('];shuffle(estimates)',start)
           if start!=-1 and end!=-1:
@@ -38,5 +46,5 @@ jobs:
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git add index.html
-          git commit -m "Use original length question examples"
+          git commit -m "Use generic original height examples"
           git push
