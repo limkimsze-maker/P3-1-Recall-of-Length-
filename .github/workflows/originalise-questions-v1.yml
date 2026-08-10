@@ -1,0 +1,42 @@
+name: Originalise Questions V1
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace source examples and load originality layer
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'const unitObjects=\[.*?\];\nconst structures=', '''const unitObjects=[
+          {name:"wardrobe",type:"cupboard",value:2,unit:"m",dimension:"height"},{name:"magazine",type:"book",value:26,unit:"cm",dimension:"length"},{name:"coach",type:"bus",value:11,unit:"m",dimension:"length"},{name:"marker pen",type:"pen",value:14,unit:"cm",dimension:"length"},{name:"lift door",type:"door",value:2,unit:"m",dimension:"height"},{name:"sports bottle",type:"bottle",value:24,unit:"cm",dimension:"height"},{name:"school hall",type:"corridor",value:18,unit:"m",dimension:"length"},{name:"coloured pencil",type:"pencil",value:17,unit:"cm",dimension:"length"},{name:"study table",type:"table",value:1,unit:"m",dimension:"length"},{name:"measuring strip",type:"ruler",value:30,unit:"cm",dimension:"length"}
+          ];
+          const structures=''', s, count=1, flags=re.S)
+          start=s.find('const estimates=[')
+          end=s.find('];shuffle(estimates)',start)
+          if start!=-1 and end!=-1:
+              new='''const estimates=[{name:"sports bottle",type:"bottle",measure:"Height ?",q:"Which is the most sensible height of a sports bottle?",ans:"24 cm",ops:["24 cm","24 m","240 m","2 m"]},{name:"school hall",type:"corridor",measure:"Length ?",q:"Which is the most sensible length of a school hall?",ans:"18 m",ops:["18 m","18 cm","180 cm","1 cm"]},{name:"study table",type:"table",measure:"Length ?",q:"Which is the most sensible length of a study table?",ans:"1 m",ops:["1 m","1 cm","10 m","100 m"]},{name:"coloured pencil",type:"pencil",measure:"Length ?",q:"Which is the most sensible length of a coloured pencil?",ans:"17 cm",ops:["17 cm","17 m","170 m","2 m"]},{name:"bed",type:"bed",measure:"Length ?",q:"Which is the most sensible length of a bed?",ans:"2 m",ops:["2 m","2 cm","20 cm","20 m"]}'''
+              s=s[:start]+new+s[end:]
+          hook='''<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-original-questions-v1.js?v=20260810a" data-practice="1"></script>\n'''
+          if 'sports-fiesta-original-questions-v1.js' not in s:
+              marker='<script src="https://limkimsze-maker.github.io/P3-Length-Mass-and-Volume-Sports-Fiesta-/sports-fiesta-medal-hook-v4.js'
+              s=s.replace(marker,hook+marker,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit changes
+        run: |
+          if git diff --quiet; then exit 0; fi
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m "Use original length question examples"
+          git push
